@@ -334,19 +334,34 @@ Create a function 'calcAverageHumanAge', which accepts an arrays of dog's ages (
 4. Run the function for both test datasets
 TEST DATA 1: [5, 2, 4, 1, 15, 8, 3]
 TEST DATA 2: [16, 6, 10, 5, 6, 1, 4]
-GOOD LUCK 😀
+GOOD LUCK 😀 
 */
 
-const calcAverageHumanAge = function (ages) {
-  const humanAges = ages.map(dog => (dog <= 2 ? dog * 2 : 16 + dog * 4));
-  const adultDogs = humanAges.filter(dog => dog >= 18);
-  // const AvgHumanAges = parseInt(
-  //   humanAges.reduce((acc, cur) => acc + cur, 0) / humanAges.length
-  // );
-  const AvgHumanAges = parseInt(
-    humanAges.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0)
-  );
-  // (2+3)/2 === 2/2 + 2/3
-  return `${humanAges} / ${adultDogs} / ${AvgHumanAges}`;
-};
-console.log(calcAverageHumanAge([16, 6, 10, 5, 6, 1, 4]));
+// const calcAverageHumanAge = function (ages) {
+//   const humanAges = ages.map(dog => (dog <= 2 ? dog * 2 : 16 + dog * 4));
+//   const adultDogs = humanAges.filter(dog => dog >= 18);
+//   // const AvgHumanAges = parseInt(
+//   //   humanAges.reduce((acc, cur) => acc + cur, 0) / humanAges.length
+//   // );
+//   const AvgHumanAges = parseInt(
+//     humanAges.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0)
+//   );
+//   // (2+3)/2 === 2/2 + 2/3
+//   return `${humanAges} / ${adultDogs} / ${AvgHumanAges}`;
+// };
+// console.log(calcAverageHumanAge([16, 6, 10, 5, 6, 1, 4]));
+
+///////////////////////////////////////
+// Chaining methods
+/**
+ * 메서드가 새 배열을 반환하는 한, 메서드를 연속해서 쓸 수 있다.
+ * 이런 경우 오류가 발생했을 때 어느 부분인지 알기 어렵다.
+ * arr 을 인자로 넘겨 진행상황을 파악해 볼 수 있다.
+ */
+
+const eurToUsd = 1.1;
+const totalDepositsUSD = movements
+  .filter(mov => mov > 0)
+  .map(mov => mov * eurToUsd)
+  .reduce((acc, cur) => acc + cur, 0);
+console.log(totalDepositsUSD);
