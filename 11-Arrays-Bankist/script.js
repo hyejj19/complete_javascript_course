@@ -64,36 +64,6 @@ const inputClosePin = document.querySelector('.form__input--pin');
 /////////////////////////////////////////////////
 // NOTE코드 작성
 
-//* 계좌 내역 화면 표시
-const displayMovments = function (movements) {
-  //* 하드코딩 데이터 초기화
-  containerMovements.innerHTML = '';
-
-  movements.forEach((mov, i) => {
-    const type = mov > 0 ? 'deposit' : 'withdrawl';
-
-    // 화면에 표시할 html 내용 -> 동적으로 변경
-    const html = `
-    <div class="movements__row">
-      <div class="movements__type movements__type--deposit">${
-        i + 1
-      } ${type}</div>
-      <div class="movements__value">${mov}</div>
-    </div>
-    `;
-
-    // 'afterbegin' -> 메서드가 적용될 DOM 요소 안의 가장 첫번째 child
-    containerMovements.insertAdjacentHTML('afterbegin', html);
-  });
-};
-displayMovments(account1.movements);
-/**
- * >> El.innerHTML vs El.insertAdjacentHtml
- * 전자는 기존의 모든 내용을 초기화. 단 html 구조는 유지.
- * 후자는 기존 내용을 유지한 채 새로운 내용을 붙임.
- * El.insertAdjacentHtml(position, 내용) -> position 속성으로 기준 El의 beforebegin, afterbegin, beforeend, afterend 으로 위치를 설정할 수 있다.
- */
-
 //* user이니셜 속성 추가
 const createUsernames = function (accs) {
   accs.forEach(acc => {
@@ -110,12 +80,64 @@ createUsernames(accounts);
  * forEach 메서드 사용 : 새로운 배열보다 원본 데이터의 변형, 조작이 필요할 때.(위 예제의 경우 새로운 속성 추가) -> side effects
  */
 
-//* 각 계좌 총액 속성 추가
-const calcPrintBalance = function (movements) {
-  const balance = movements.reduce((acc, cur) => acc + cur, 0);
-  labelBalance.textContent = `${balance} EUR`;
+//* 계좌 내역 화면 표시
+const displayMovments = function (movements) {
+  //* 하드코딩 데이터 초기화
+  containerMovements.innerHTML = '';
+
+  movements.forEach((mov, i) => {
+    const type = mov > 0 ? 'deposit' : 'withdrawl';
+
+    // 화면에 표시할 html 내용 -> 동적으로 변경
+    const html = `
+    <div class="movements__row">
+      <div class="movements__type movements__type--deposit">${
+        i + 1
+      } ${type}</div>
+      <div class="movements__value">${mov}€</div>
+    </div>
+    `;
+
+    // 'afterbegin' -> 메서드가 적용될 DOM 요소 안의 가장 첫번째 child
+    containerMovements.insertAdjacentHTML('afterbegin', html);
+  });
 };
-calcPrintBalance(account1.movements);
+displayMovments(account1.movements);
+/**
+ * >> El.innerHTML vs El.insertAdjacentHtml
+ * 전자는 기존의 모든 내용을 초기화. 단 html 구조는 유지.
+ * 후자는 기존 내용을 유지한 채 새로운 내용을 붙임.
+ * El.insertAdjacentHtml(position, 내용) -> position 속성으로 기준 El의 beforebegin, afterbegin, beforeend, afterend 으로 위치를 설정할 수 있다.
+ */
+
+//* 각 계좌 총액 속성 추가
+const calcDisplayBalance = function (movements) {
+  const balance = movements.reduce((acc, cur) => acc + cur, 0);
+  labelBalance.textContent = `${balance}€`;
+  return balance;
+};
+calcDisplayBalance(account1.movements);
+
+//* 입출금, 이자 총액 화면표시
+const calcDisplaySummary = function (movements) {
+  const incomes = movements
+    .filter(mov => mov > 0)
+    .reduce((acc, cur) => acc + cur, 0);
+  labelSumIn.textContent = `${incomes}€`;
+
+  const out = movements
+    .filter(mov => mov < 0)
+    .reduce((acc, cur) => acc + cur, 0);
+  labelSumOut.textContent = `${Math.abs(out)}€`;
+
+  const interest = movements
+    .filter(mov => mov > 0)
+    .map(deposit => (deposit * 1.2) / 100)
+    .filter(int => int >= 1)
+    .reduce((acc, cur) => acc + cur, 0);
+  labelSumInterest.textContent = `${interest}€`;
+};
+calcDisplaySummary(account1.movements);
 
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -359,9 +381,51 @@ GOOD LUCK 😀
  * arr 을 인자로 넘겨 진행상황을 파악해 볼 수 있다.
  */
 
-const eurToUsd = 1.1;
-const totalDepositsUSD = movements
-  .filter(mov => mov > 0)
-  .map(mov => mov * eurToUsd)
-  .reduce((acc, cur) => acc + cur, 0);
-console.log(totalDepositsUSD);
+// const eurToUsd = 1.1;
+// const totalDepositsUSD = movements
+//   .filter(mov => mov > 0)
+//   .map(mov => mov * eurToUsd)
+//   .reduce((acc, cur) => acc + cur, 0);
+// console.log(totalDepositsUSD);
+
+///////////////////////////////////////
+// Coding Challenge #3
+
+/* 
+Rewrite the 'calcAverageHumanAge' function from the previous challenge, but this time as an arrow function, and using chaining!
+TEST DATA 1: [5, 2, 4, 1, 15, 8, 3]
+TEST DATA 2: [16, 6, 10, 5, 6, 1, 4]
+GOOD LUCK 😀
+*/
+
+// const calcAverageHumanAge = function (ages) {
+//   return parseInt(
+//     ages
+//       .map(dog => (dog <= 2 ? dog * 2 : 16 + dog * 4))
+//       .filter(dog => dog >= 18)
+//       .reduce((acc, cur, i, arr) => acc + cur / arr.length, 0)
+//   );
+// };
+
+// const result1 = calcAverageHumanAge([5, 2, 4, 1, 15, 8, 3]);
+// const result2 = calcAverageHumanAge([16, 6, 10, 5, 6, 1, 4]);
+// console.log(result1);
+// console.log(result2);
+
+///////////////////////////////////////
+// Find Method
+
+const firstWithdrawal = movements.find(mov => mov < 0);
+console.log(firstWithdrawal);
+
+console.log(accounts);
+
+const account = accounts.find(acc => acc.owner === 'Jessica Davis');
+console.log(account);
+
+/**
+ * 배열에서 조건에 해당하는 요소를 찾아내는 메서드
+ * filter 메서드와 동일하게, boolean 값을 리턴하는 콜백함수를 필요로 한다.
+ * 조건에 부합하는 가장 첫번째 요소를 반환한다.
+ * 배열이나 객체에 포함된 한 가지의 특징만 알고있으면 그 전체를 찾을 수 있다.
+ */
