@@ -102,7 +102,7 @@ const displayMovments = function (movements) {
     containerMovements.insertAdjacentHTML('afterbegin', html);
   });
 };
-displayMovments(account1.movements);
+
 /**
  * >> El.innerHTML vs El.insertAdjacentHtml
  * 전자는 기존의 모든 내용을 초기화. 단 html 구조는 유지.
@@ -116,10 +116,10 @@ const calcDisplayBalance = function (movements) {
   labelBalance.textContent = `${balance}€`;
   return balance;
 };
-calcDisplayBalance(account1.movements);
 
 //* 입출금, 이자 총액 화면표시
-const calcDisplaySummary = function (movements) {
+const calcDisplaySummary = function (account) {
+  const movements = account.movements;
   const incomes = movements
     .filter(mov => mov > 0)
     .reduce((acc, cur) => acc + cur, 0);
@@ -132,12 +132,41 @@ const calcDisplaySummary = function (movements) {
 
   const interest = movements
     .filter(mov => mov > 0)
-    .map(deposit => (deposit * 1.2) / 100)
+    .map(deposit => (deposit * account.interestRate) / 100)
     .filter(int => int >= 1)
     .reduce((acc, cur) => acc + cur, 0);
   labelSumInterest.textContent = `${interest}€`;
 };
-calcDisplaySummary(account1.movements);
+
+//* 이벤트 핸들러
+let currentAccount;
+btnLogin.addEventListener('click', function (e) {
+  // form 내의 btn이 submit 하여 새로고침 되는 것을 방지.
+  e.preventDefault();
+
+  currentAccount = accounts.find(
+    acc => acc.username === inputLoginUsername.value
+  );
+
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    // Display UI & message
+    labelWelcome.textContent = `Welcome back, ${
+      currentAccount.owner.split(' ')[0]
+    }!`;
+    containerApp.style.opacity = 100;
+
+    // Clear Input fileds
+    inputLoginUsername.value = inputLoginPin.value = '';
+    inputLoginPin.blur();
+
+    // Display movements
+    displayMovments(currentAccount.movements);
+    // Display balance
+    calcDisplayBalance(currentAccount.movements);
+    // Display summary
+    calcDisplaySummary(currentAccount);
+  }
+});
 
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -415,13 +444,14 @@ GOOD LUCK 😀
 ///////////////////////////////////////
 // Find Method
 
-const firstWithdrawal = movements.find(mov => mov < 0);
-console.log(firstWithdrawal);
+// const account = accounts.find(acc => acc.owner === 'Jessica Davis');
+// console.log(account);
 
-console.log(accounts);
-
-const account = accounts.find(acc => acc.owner === 'Jessica Davis');
-console.log(account);
+// let accountRe;
+// for (let i = 0; i < accounts.length; i++) {
+//   if (accounts[i].owner === 'Jessica Davis') accountRe = accounts[i];
+// }
+// console.log(accountRe);
 
 /**
  * 배열에서 조건에 해당하는 요소를 찾아내는 메서드
