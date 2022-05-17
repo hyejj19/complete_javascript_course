@@ -161,11 +161,21 @@ btnLogin.addEventListener('click', function (e) {
 
     // Display movements
     displayMovments(currentAccount.movements);
+
     // Display balance
     calcDisplayBalance(currentAccount.movements);
+
     // Display summary
     calcDisplaySummary(currentAccount);
   }
+});
+
+btnTransfer.addEventListener('click', function (e) {
+  e.preventDefault();
+  const amount = Number(inputTransferAmount.value);
+  const receiverAcc = accounts.find(
+    acc => acc.username === inputTransferTo.value
+  );
 });
 
 /////////////////////////////////////////////////
