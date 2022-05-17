@@ -65,6 +65,10 @@ const inputClosePin = document.querySelector('.form__input--pin');
 // NOTE코드 작성
 
 //* user이니셜 속성 추가
+/**
+ * 함수 밖 전역스코프에서 데이터를 조작하기 보다는, 함수를 통해 넘겨주고 그 안에서 조작하는 것이 더 좋다. (관리측면, 데이터 보호 측면)
+ * forEach 메서드 사용 : 새로운 배열보다 원본 데이터의 변형, 조작이 필요할 때.(위 예제의 경우 새로운 속성 추가) -> side effects
+ */
 const createUsernames = function (accs) {
   accs.forEach(acc => {
     acc.username = acc.owner
@@ -75,12 +79,26 @@ const createUsernames = function (accs) {
   });
 };
 createUsernames(accounts);
-/**
- * 함수 밖 전역스코프에서 데이터를 조작하기 보다는, 함수를 통해 넘겨주고 그 안에서 조작하는 것이 더 좋다. (관리측면, 데이터 보호 측면)
- * forEach 메서드 사용 : 새로운 배열보다 원본 데이터의 변형, 조작이 필요할 때.(위 예제의 경우 새로운 속성 추가) -> side effects
- */
+
+//* UI를 업데이트 하는 함수들을 실행하기 위한 함수
+const updateUI = function (acc) {
+  // Display movements
+  displayMovments(acc.movements);
+
+  // Display balance
+  calcDisplayBalance(acc);
+
+  // Display summary
+  calcDisplaySummary(acc);
+};
 
 //* 계좌 내역 화면 표시
+/**
+ * >> El.innerHTML vs El.insertAdjacentHtml
+ * 전자는 기존의 모든 내용을 초기화. 단 html 구조는 유지.
+ * 후자는 기존 내용을 유지한 채 새로운 내용을 붙임.
+ * El.insertAdjacentHtml(position, 내용) -> position 속성으로 기준 El의 beforebegin, afterbegin, beforeend, afterend 으로 위치를 설정할 수 있다.
+ */
 const displayMovments = function (movements) {
   //* 하드코딩 데이터 초기화
   containerMovements.innerHTML = '';
@@ -89,6 +107,7 @@ const displayMovments = function (movements) {
     const type = mov > 0 ? 'deposit' : 'withdrawl';
 
     // 화면에 표시할 html 내용 -> 동적으로 변경
+
     const html = `
     <div class="movements__row">
       <div class="movements__type movements__type--deposit">${
@@ -103,18 +122,10 @@ const displayMovments = function (movements) {
   });
 };
 
-/**
- * >> El.innerHTML vs El.insertAdjacentHtml
- * 전자는 기존의 모든 내용을 초기화. 단 html 구조는 유지.
- * 후자는 기존 내용을 유지한 채 새로운 내용을 붙임.
- * El.insertAdjacentHtml(position, 내용) -> position 속성으로 기준 El의 beforebegin, afterbegin, beforeend, afterend 으로 위치를 설정할 수 있다.
- */
-
 //* 각 계좌 총액 속성 추가
-const calcDisplayBalance = function (movements) {
-  const balance = movements.reduce((acc, cur) => acc + cur, 0);
-  labelBalance.textContent = `${balance}€`;
-  return balance;
+const calcDisplayBalance = function (acc) {
+  acc.balance = acc.movements.reduce((acc, cur) => acc + cur, 0);
+  labelBalance.textContent = `${acc.balance}€`;
 };
 
 //* 입출금, 이자 총액 화면표시
@@ -159,24 +170,84 @@ btnLogin.addEventListener('click', function (e) {
     inputLoginUsername.value = inputLoginPin.value = '';
     inputLoginPin.blur();
 
-    // Display movements
-    displayMovments(currentAccount.movements);
-
-    // Display balance
-    calcDisplayBalance(currentAccount.movements);
-
-    // Display summary
-    calcDisplaySummary(currentAccount);
+    // Update UI
+    updateUI(currentAccount);
   }
 });
 
+//* 송금 기능
 btnTransfer.addEventListener('click', function (e) {
   e.preventDefault();
   const amount = Number(inputTransferAmount.value);
   const receiverAcc = accounts.find(
     acc => acc.username === inputTransferTo.value
   );
+  if (
+    amount > 0 &&
+    receiverAcc &&
+    currentAccount.balance >= amount &&
+    receiverAcc.username !== currentAccount.username
+  ) {
+    // 송금 실행
+    currentAccount.movements.push(-amount);
+    receiverAcc.movements.push(amount);
+
+    // UI 업데이트
+    updateUI(currentAccount);
+  }
+
+  // input 창 비우기
+  inputTransferTo.value = inputTransferAmount.value = '';
+  inputTransferAmount.blur();
 });
+
+//* 대출
+btnLoan.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  const amount = Number(inputLoanAmount.value);
+
+  if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
+    // 계좌에 추가
+    currentAccount.movements.push(amount);
+
+    // UI 업데이트
+    updateUI(currentAccount);
+  }
+  // input 창 비우기
+  inputLoanAmount.value = '';
+  inputLoanAmount.blur();
+});
+
+//* 계좌 삭제
+btnClose.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  if (
+    inputCloseUsername.value === currentAccount.username &&
+    Number(inputClosePin.value) === currentAccount.pin
+  ) {
+    const index = accounts.findIndex(
+      acc => acc.username === currentAccount.username
+    );
+
+    //input 창 비우기
+    inputCloseUsername.value = inputClosePin.value = '';
+    inputClosePin.blur();
+
+    //계좌 삭제
+    accounts.splice(index, 1);
+
+    // UI 숨기기
+    containerApp.style.opacity = 0;
+  }
+});
+/**
+ * findIndex vs indexOf
+ * findInex(callback) 콜백함수를 이용해 자세한 컨디션을 조절할 수 있다.
+ * indexOf(value) 특정 value의 포함 여부를 확인하므로 자세한 조건을 걸 수 없다.
+ * find와 findIndex 메서드 모두 현재 요소, 인덱스, 배열을 인자값으로 쓸 수 있다. (실제 사용 여부는 글쎄), ES6에서 업데이트 된 내용.
+ */
 
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -453,6 +524,12 @@ GOOD LUCK 😀
 
 ///////////////////////////////////////
 // Find Method
+/**
+ * 배열에서 조건에 해당하는 요소를 찾아내는 메서드
+ * filter 메서드와 동일하게, boolean 값을 리턴하는 콜백함수를 필요로 한다.
+ * 조건에 부합하는 가장 첫번째 요소를 반환한다.
+ * 배열이나 객체에 포함된 한 가지의 특징만 알고있으면 그 전체를 찾을 수 있다.
+ */
 
 // const account = accounts.find(acc => acc.owner === 'Jessica Davis');
 // console.log(account);
@@ -463,9 +540,29 @@ GOOD LUCK 😀
 // }
 // console.log(accountRe);
 
+///////////////////////////////////////
+// Some & Every 메서드
 /**
- * 배열에서 조건에 해당하는 요소를 찾아내는 메서드
- * filter 메서드와 동일하게, boolean 값을 리턴하는 콜백함수를 필요로 한다.
- * 조건에 부합하는 가장 첫번째 요소를 반환한다.
- * 배열이나 객체에 포함된 한 가지의 특징만 알고있으면 그 전체를 찾을 수 있다.
+ * includes(v) => v의 일치 여부를 따져 true, false 반환
+ * some(콜백) => 콜백함수의 조건에 부합하는 요소가 하나라도 있으면 true 반환
  */
+
+console.log(movements);
+
+// // 일치 여부 확인
+// console.log(movements.includes(-130));
+
+// // SOME: 조건 적합여부 확인 (하나라도 맞으면 TRUE)
+// console.log(movements.some(mov => mov === -130));
+
+// const anyDeposits = movements.some(mov => mov > 5000);
+// console.log(anyDeposits);
+
+// // EVERY: 조건 적합여부 확인 (모든 것이 맞으면 TRUE)
+console.log(movements.every(mov => !isNaN(mov)));
+
+// 콜백함수 재사용하기
+const deposit = mov => mov > 0;
+console.log(movements.some(deposit));
+console.log(movements.every(deposit));
+console.log(movements.filter(deposit));
