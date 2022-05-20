@@ -83,7 +83,7 @@ createUsernames(accounts);
 //* UI를 업데이트 하는 함수들을 실행하기 위한 함수
 const updateUI = function (acc) {
   // Display movements
-  displayMovments(acc.movements);
+  displayMovements(acc.movements);
 
   // Display balance
   calcDisplayBalance(acc);
@@ -99,20 +99,22 @@ const updateUI = function (acc) {
  * 후자는 기존 내용을 유지한 채 새로운 내용을 붙임.
  * El.insertAdjacentHtml(position, 내용) -> position 속성으로 기준 El의 beforebegin, afterbegin, beforeend, afterend 으로 위치를 설정할 수 있다.
  */
-const displayMovments = function (movements) {
-  //* 하드코딩 데이터 초기화
+const displayMovements = function (movements, sort = false) {
+  // 하드코딩 데이터 초기화
   containerMovements.innerHTML = '';
 
-  movements.forEach((mov, i) => {
-    const type = mov > 0 ? 'deposit' : 'withdrawl';
+  // sort
+  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
 
-    // 화면에 표시할 html 내용 -> 동적으로 변경
+  // 화면에 표시할 html 내용 -> 동적으로 변경
+  movs.forEach((mov, i) => {
+    const type = mov > 0 ? 'deposit' : 'withdrawal';
 
     const html = `
     <div class="movements__row">
-      <div class="movements__type movements__type--deposit">${
-        i + 1
-      } ${type}</div>
+      <div class="movements__type movements__type--${type}">${
+      i + 1
+    } ${type}</div>
       <div class="movements__value">${mov}€</div>
     </div>
     `;
@@ -248,6 +250,13 @@ btnClose.addEventListener('click', function (e) {
  * indexOf(value) 특정 value의 포함 여부를 확인하므로 자세한 조건을 걸 수 없다.
  * find와 findIndex 메서드 모두 현재 요소, 인덱스, 배열을 인자값으로 쓸 수 있다. (실제 사용 여부는 글쎄), ES6에서 업데이트 된 내용.
  */
+
+let sorted = false;
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+  displayMovements(currentAccount.movements, !sorted);
+  sorted = !sorted;
+});
 
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -547,7 +556,7 @@ GOOD LUCK 😀
  * some(콜백) => 콜백함수의 조건에 부합하는 요소가 하나라도 있으면 true 반환
  */
 
-console.log(movements);
+// console.log(movements);
 
 // // 일치 여부 확인
 // console.log(movements.includes(-130));
@@ -559,10 +568,246 @@ console.log(movements);
 // console.log(anyDeposits);
 
 // // EVERY: 조건 적합여부 확인 (모든 것이 맞으면 TRUE)
-console.log(movements.every(mov => !isNaN(mov)));
+// console.log(movements.every(mov => !isNaN(mov)));
 
 // 콜백함수 재사용하기
-const deposit = mov => mov > 0;
-console.log(movements.some(deposit));
-console.log(movements.every(deposit));
-console.log(movements.filter(deposit));
+// const deposit = mov => mov > 0;
+// console.log(movements.some(deposit));
+// console.log(movements.every(deposit));
+// console.log(movements.filter(deposit));
+
+///////////////////////////////////////
+// flat & flatMap 메서드
+/**
+ * flat 메서드 : 중첩된 배열의 요소들을 flat 하게 하여 하나의 배열로 리턴
+ * flat(depth) : flat하게 만들 뎁스를 전달, 없을 시 기본값으로 1이 셋팅된다.
+ * flatMap(콜백) : map으로 얻은 결과물에 flat을 실행한다. (map + flat)
+ * flatMap의 경우 1레벨에서의 flat밖에 실행하지 못하기 때문에, 더 깊은 중첩 배열에 적용할 경우 flat과 map을 따로 사용하여야 한다.
+ */
+
+// const arr = [[1, 2, 3], [4, 5, 6], 7, 8];
+// console.log(arr.flat()); //[1, 2, 3, 4, 5, 6, 7, 8]
+
+// const arrDeep = [[[1, 2], 3], [4, [5, 6]], 7, 8];
+// console.log(arrDeep.flat(2)); //[1, 2, 3, 4, 5, 6, 7, 8]
+
+// // flat
+// const overalBalance = accounts
+//   .map(acc => acc.movements)
+//   .flat()
+//   .reduce((acc, cur) => acc + cur, 0);
+// console.log(overalBalance);
+
+// // flatMap
+// const overalBalance2 = accounts
+//   .flatMap(acc => acc.movements)
+//   .reduce((acc, cur) => acc + cur, 0);
+// console.log(overalBalance2);
+
+///////////////////////////////////////
+/** Sorting
+ * strings.sort() : 원본 배열을 변화시킨다.
+ * 숫자일 때에도 문자열로 변환하여, 문자열을 기준으로 정렬한다.
+ */
+
+// 문자열
+// const owners = ['Hyejung', 'Jack', 'Adam', 'Martha'];
+// owners.sort((a, b) => {
+//   if (a > b) return -1;
+//   if (a < b) return 1;
+// });
+// console.log(owners);
+
+// 숫자
+// console.log(movements);
+
+// return < 0, A, B (keep order) (a - b < 0)
+// return > 0, B, A (switch order) (a - b > 0)
+
+// 오름차순 정렬
+// movements.sort((a, b) => {
+//   if (a < b) return -1; // keep
+//   if (a > b) return 1; // switch
+//   // return a - b;
+// });
+// console.log(movements);
+
+// 내림차순 정렬
+// movements.sort((a, b) => {
+//   if (a > b) return -1; // keep
+//   if (a < b) return 1; // switch
+//   // return b - a;
+// });
+// console.log(movements);
+
+///////////////////////////////////////
+/** 배열 생성 & 배열 채우기의 다양한 방법들
+ * new Array(length) length만큼의 empty 배열을 생성
+ * arr.fill(v, strIdx, endIdx) strIdx ~ endIdx 만큼의 범위에 v가 포함되도록 arr을 변경. new Array 생성자와 체이닝해서 원하는 배열을 만들 수 있다.
+ * Array.from({length : n}, (cur, i) => 조건)
+ * 원하는 길이, 원하는 조건을 가진 새로운 배열을 만들 수 있다.
+ * 이 때 콜백함수는 (현재 값, 인덱스)의 순서로 인자값을 받는데, 현재 값이 필요 없다면 '_' 로 표기할 수 있다.
+ * Array.from 은 유사배열/이터러블을 배열로 변환시킨다. 배열이 되면 배열 메서드를 사용할 수 있다.
+ * */
+
+/* const arr = [1, 2, 3, 4, 5, 6, 7];
+
+// 빈 배열 + fill 메서드
+const x = new Array(7).fill(0);
+// console.log(x);
+
+// 빈 배열 + fill(채울 값, 범위)
+const y = new Array(7);
+y.fill(1, 3, 5); //fill(채울 값, startIdx, endIdx);
+// console.log(y);
+
+// 기존 배열 + fill(채울 값, 범위)
+arr.fill(44, 1, 5);
+// console.log(arr);
+
+// Array.from (이터러블(유사 배열) -> 배열)
+const arr2 = Array.from({ length: 7 }, () => 1);
+// console.log(arr2);
+
+const z = Array.from({ length: 7 }, (_, i) => i + 1);
+// console.log(z);
+
+const randomDice = Array.from(
+  { length: 100 },
+  cur => (cur = Math.ceil(Math.random() * 6))
+);
+// console.log(randomDice); */
+
+// querySelectorAll()에서 얻어온 UI 상의 데이터 노드리스트(유사배열 객체)를 배열화
+labelBalance.addEventListener('click', function () {
+  // 노드리스트 -> 배열 1
+  const movementsUI = Array.from(
+    document.querySelectorAll('.movements__value'),
+    el => Number(el.textContent.replace('€', ''))
+  );
+
+  console.log(movementsUI);
+
+  // 노드리스트 -> 배열 2
+  const movementsUI2 = [...document.querySelectorAll('.movements__value')].map(
+    el => Number(el.textContent.replace('€', ''))
+  );
+  console.log(movementsUI2);
+});
+
+///////////////////////////////////////
+// Array Method Practice
+
+// 1.
+const bankDepositSum = accounts
+  .flatMap(acc => acc.movements)
+  .filter(mov => mov > 0)
+  .reduce((acc, cur) => acc + cur, 0);
+// console.log(bankDepositSum);
+
+// 2.
+// const numDeposits1000 = accounts
+//   .flatMap(acc => acc.movements)
+//   .filter(mov => mov >= 1000);
+// console.log(bankDepositCnt.length);
+
+// REDUCE 로 카운트 세기
+const numDeposits1000 = accounts
+  .flatMap(acc => acc.movements)
+  .reduce((cnt, cur) => (cur >= 1000 ? ++cnt : cnt), 0);
+
+// console.log(numDeposits1000);
+
+// 전위연산자, 후위연산자의 차이 : 후위는 할당 후 연산이기 때문에, 결과값이 바로 필요할 경우 전위연산자를 사용한다.
+// let t = 10;
+// console.log(t++); //10
+// console.log(t); //11
+
+// 3. REDUCE 사용해서 객체 만들기 TODO
+const { deposits, withdrawals } = accounts
+  .flatMap(acc => acc.movements)
+  .reduce(
+    (sums, cur) => {
+      // cur > 0 ? (sums.deposits += cur) : (sums.withdrawals += cur);
+      sums[cur > 0 ? 'deposits' : 'withdrawals'] += cur;
+      return sums;
+    },
+    { deposits: 0, withdrawals: 0 }
+  );
+// console.log(deposits, withdrawals);
+// init 값은 콜백의 0회차 실행에서의 sums의 값이 되기 때문에, sums로 접근할 수 있는 것.
+
+// 4.
+const convertTitleCase = function (title) {
+  const capitalize = str => str[0].toUpperCase() + str.slice(1);
+
+  const excections = ['a', 'an', 'and', 'the', 'but', 'or', 'on', 'in', 'with'];
+  const newTitle = title
+    .toLowerCase()
+    .split(' ')
+    .map(word => (excections.includes(word) ? word : capitalize(word)))
+    .join(' ');
+
+  return capitalize(newTitle);
+};
+// console.log(convertTitleCase('and is a NICE title'));
+
+///////////////////////////////////////
+// Coding Challenge #4
+
+/* 
+Julia and Kate are still studying dogs, and this time they are studying if dogs are eating too much or too little.
+Eating too much means the dog's current food portion is larger than the recommended portion, and eating too little is the opposite.
+Eating an okay amount means the dog's current food portion is within a range 10% above and 10% below the recommended portion (see hint).
+
+1. Loop over the array containing dog objects, and for each dog, calculate the recommended food portion and add it to the object as a new property. Do NOT create a new array, simply loop over the array. Forumla: recommendedFood = weight ** 0.75 * 28. (The result is in grams of food, and the weight needs to be in kg)
+2. Find Sarah's dog and log to the console whether it's eating too much or too little. HINT: Some dogs have multiple owners, so you first need to find Sarah in the owners array, and so this one is a bit tricky (on purpose) 🤓
+3. Create an array containing all owners of dogs who eat too much ('ownersEatTooMuch') and an array with all owners of dogs who eat too little ('ownersEatTooLittle').
+4. Log a string to the console for each array created in 3., like this: "Matilda and Alice and Bob's dogs eat too much!" and "Sarah and John and Michael's dogs eat too little!"
+5. Log to the console whether there is any dog eating EXACTLY the amount of food that is recommended (just true or false)
+6. Log to the console whether there is any dog eating an OKAY amount of food (just true or false)
+7. Create an array containing the dogs that are eating an OKAY amount of food (try to reuse the condition used in 6.)
+8. Create a shallow copy of the dogs array and sort it by recommended food portion in an ascending order (keep in mind that the portions are inside the array's objects)
+
+HINT 1: Use many different tools to solve these challenges, you can use the summary lecture to choose between them 😉
+HINT 2: Being within a range 10% above and below the recommended portion means: current > (recommended * 0.90) && current < (recommended * 1.10). Basically, the current portion should be between 90% and 110% of the recommended portion.
+
+TEST DATA:
+const dogs = [
+  { weight: 22, curFood: 250, owners: ['Alice', 'Bob'] },
+  { weight: 8, curFood: 200, owners: ['Matilda'] },
+  { weight: 13, curFood: 275, owners: ['Sarah', 'John'] },
+  { weight: 32, curFood: 340, owners: ['Michael'] }
+];
+
+GOOD LUCK 😀
+*/
+
+/*1. Loop over the array containing dog objects, and for each dog, calculate the recommended food portion and add it to the object as a new property. Do NOT create a new array, simply loop over the array. Forumla: recommendedFood = weight ** 0.75 * 28. (The result is in grams of food, and the weight needs to be in kg)*/
+const dogs = [
+  { weight: 22, curFood: 250, owners: ['Alice', 'Bob'] },
+  { weight: 8, curFood: 200, owners: ['Matilda'] },
+  { weight: 13, curFood: 275, owners: ['Sarah', 'John'] },
+  { weight: 32, curFood: 340, owners: ['Michael'] },
+];
+dogs.forEach(dog => (dog.recommendedFood = dog.weight ** 0.75 * 28));
+
+// 2. Find Sarah's dog and log to the console whether it's eating too much or too little. HINT: Some dogs have multiple owners, so you first need to find Sarah in the owners array, and so this one is a bit tricky (on purpose) 🤓
+const dogSarah = function (dogs) {
+  const sarahDog = dogs.find(dog => dog.owners.includes('Sarah'));
+
+  if (
+    sarahDog.curFood > sarahDog.recommendedFood * 0.9 &&
+    sarahDog.curFood < sarahDog.recommendedFood * 1.1
+  )
+    return '적정량 섭취중';
+  else if (sarahDog.curFood > sarahDog.recommendedFood)
+    return '너무 많이 먹어요';
+  else if (sarahDog.curFood < sarahDog.recommendedFood)
+    return '너무 적게 먹어요';
+};
+// console.log(dogSarah(dogs));
+
+//3. Create an array containing all owners of dogs who eat too much ('ownersEatTooMuch') and an array with all owners of dogs who eat too little ('ownersEatTooLittle').
+
+// 4. Log a string to the console for each array created in 3., like this: "Matilda and Alice and Bob's dogs eat too much!" and "Sarah and John and Michael's dogs eat too little!"
