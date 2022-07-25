@@ -43,6 +43,10 @@ const restaurant = {
   },
 };
 
+function test({ name: name, open: { openingHours: thu } }) {
+  console.log(name, open);
+}
+
 const openingHours = {
   thu: {
     open: 12,
@@ -92,8 +96,8 @@ Afterwards, test with your own test data!
 GOOD LUCK 😀
 */
 
-document.body.append(document.createElement('textarea'));
-document.body.append(document.createElement('button'));
+// document.body.append(document.createElement('textarea'));
+// document.body.append(document.createElement('button'));
 
 // 입력된 text 데이터 변수 저장 & camelCase 변환 함수 호출
 document.querySelector('button').addEventListener('click', function () {
